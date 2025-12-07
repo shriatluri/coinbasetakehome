@@ -1,5 +1,9 @@
 # Generated data files
 coinbase_data.json
+coinbase.duckdb
+coinbase.duckdb.wal
+charts/
+raw_data/
 
 # Python
 __pycache__/
