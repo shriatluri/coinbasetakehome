@@ -1,0 +1,10 @@
+# Core dependencies for Coinbase Data Pipeline
+requests>=2.31.0
+duckdb>=0.9.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+numpy<2.0.0
+
+# Optional: SQL client for querying DuckDB interactively, found this very helpful
+# harlequin>=2.4.0
+
