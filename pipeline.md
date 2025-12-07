@@ -52,16 +52,21 @@ Cleans, validates, and enriches raw data. Validates each candle record to ensure
 Manages DuckDB storage and database operations. Creates tables and indexes on first run. Supports incremental loading by querying the database for the most recent timestamp per product and only fetching new data. Uses upsert operations (INSERT OR REPLACE) to handle overlapping records safely, making the pipeline idempotent.
 
 ### Visualization Layer
-Generates charts from database data. Includes empty data validation to gracefully handle missing or empty datasets. Supports generating required charts only, additional charts only, or all charts. Uses brand colors (BTC orange, ETH blue) for consistent visual identity.
+Generates charts from database data. Organized into three modules for maintainability:
+- **`visualize.py`**: Main entry point that coordinates chart generation
+- **`required.py`**: Contains required visualizations (hourly volume, average price)
+- **`additional.py`**: Contains additional visualizations (volatility, trends, patterns)
+
+Includes empty data validation to gracefully handle missing or empty datasets. Supports generating required charts only, additional charts only, or all charts. Uses brand colors (BTC orange, ETH blue) for consistent visual identity.
 
 **Required Charts:**
 - **Hourly Volume**: Line chart showing volume per hour for BTC-USD and ETH-USD
 - **Average Price**: Dual-axis line chart for price trends (accounts for BTC/ETH scale difference)
 
 **Additional Charts:**
-- **Price Volatility**: High-low price range and volatility as percentage of mid-price
+- **Price Volatility**: High-low price range and volatility as percentage of mid-price (uses dual Y-axes for clarity)
 - **Price Change Trends**: Hourly price change percentage and cumulative price change over time
-- **24-Hour Pattern**: Average price and volume patterns by hour of day (UTC)
+- **24-Hour Pattern**: Average price and volume patterns by hour of day (UTC) (uses dual Y-axes for price clarity)
 
 ### ETL Orchestrator
 Coordinates the ETL stages (Extract, Transform, Load). Handles incremental vs. full refresh modes. Supports custom date ranges and product selection. Returns statistics on records processed at each stage.

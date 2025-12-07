@@ -14,7 +14,9 @@ coinbasetakehome/
 │   ├── load.py          # Load layer (DuckDB)
 │   └── config.py        # Configuration constants
 ├── visualization/       # Visualization modules
-│   └── visualize.py     # Visualization layer
+│   ├── visualize.py     # Main entry point
+│   ├── required.py      # Required charts (hourly volume, average price)
+│   └── additional.py    # Additional charts (volatility, trends, patterns)
 │
 ├── raw_data/            # Raw API responses (for debugging)
 │   └── candles_raw.json
