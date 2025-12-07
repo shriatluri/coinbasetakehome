@@ -1,0 +1,3 @@
+"""
+Coinbase ETL Pipeline Package
+"""
