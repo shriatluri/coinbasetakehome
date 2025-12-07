@@ -78,7 +78,7 @@ Examples:
         '--charts',
         choices=['required', 'additional', 'all'],
         default='all',
-        help='Which charts to generate: required (2 charts), additional (3 charts), or all (5 charts, default)'
+        help='Which charts to generate: required (2 charts), additional (2 charts), or all (4 charts, default)'
     )
     parser.add_argument(
         '--skip-visualizations',

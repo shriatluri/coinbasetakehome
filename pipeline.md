@@ -66,7 +66,6 @@ Includes empty data validation to gracefully handle missing or empty datasets. S
 **Additional Charts:**
 - **Price Volatility**: High-low price range and volatility as percentage of mid-price (uses dual Y-axes for clarity)
 - **Price Change Trends**: Hourly price change percentage and cumulative price change over time
-- **24-Hour Pattern**: Average price and volume patterns by hour of day (UTC) (uses dual Y-axes for price clarity)
 
 ### ETL Orchestrator
 Coordinates the ETL stages (Extract, Transform, Load). Handles incremental vs. full refresh modes. Supports custom date ranges and product selection. Returns statistics on records processed at each stage.

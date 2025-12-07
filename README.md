@@ -25,8 +25,7 @@ coinbasetakehome/
 │   ├── hourly_volume.png      # Required
 │   ├── avg_price.png          # Required
 │   ├── price_volatility.png   # Additional
-│   ├── price_change_trends.png # Additional
-│   └── 24hour_pattern.png      # Additional
+│   └── price_change_trends.png # Additional
 │
 ├── coinbase.duckdb      # Database file
 │
@@ -75,7 +74,7 @@ This will automatically:
 # Generate only required charts (2 charts)
 python run.py --charts required
 
-# Generate only additional charts (3 charts)
+# Generate only additional charts (2 charts)
 python run.py --charts additional
 
 # Skip ETL, only generate visualizations
@@ -121,7 +120,7 @@ python visualization/visualize.py
 # or explicitly:
 python visualization/visualize.py --type all
 ```
-This generates all 5 visualizations (required + additional).
+This generates all 4 visualizations (required + additional).
 
 **Generate only required charts:**
 ```bash
@@ -135,10 +134,9 @@ Generates the 2 required visualizations:
 ```bash
 python visualization/visualize.py --type additional
 ```
-Generates 3 additional visualizations:
+Generates 2 additional visualizations:
 - `price_volatility.png` - Price range (high-low) and volatility percentage
 - `price_change_trends.png` - Hourly price changes and cumulative trends
-- `24hour_pattern.png` - Average price and volume patterns by hour of day
 
 All charts are saved to the `charts/` directory.
 
@@ -189,4 +187,3 @@ Harlequin provides a user-friendly interface with syntax highlighting, query his
 ### Additional Visualizations
 - `price_volatility.png` - Price range (high-low spread) and volatility as percentage of mid-price
 - `price_change_trends.png` - Hourly price change percentage and cumulative price change over time
-- `24hour_pattern.png` - Average price and volume patterns by hour of day (UTC), revealing intraday trading patterns

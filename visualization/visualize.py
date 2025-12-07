@@ -13,8 +13,7 @@ import logging
 from visualization.required import plot_hourly_volume, plot_average_price
 from visualization.additional import (
     plot_price_volatility,
-    plot_price_change_trends,
-    plot_24hour_pattern
+    plot_price_change_trends
 )
 from ETL_process import config
 
@@ -32,12 +31,11 @@ def generate_required_charts() -> None:
 
 
 def generate_additional_charts() -> None:
-    """Generate additional visualizations (volatility, price changes, 24-hour patterns)."""
+    """Generate additional visualizations (volatility and price change trends)."""
     logger.info("Generating additional visualizations...")
 
     plot_price_volatility()
     plot_price_change_trends()
-    plot_24hour_pattern()
 
     logger.info(f"Additional charts saved to {config.CHARTS_DIR}")
 
@@ -62,7 +60,7 @@ if __name__ == "__main__":
         '--type',
         choices=['required', 'additional', 'all'],
         default='all',
-        help='Type of visualizations to generate: required (hourly volume, avg price), additional (volatility, trends, patterns), or all (default)'
+        help='Type of visualizations to generate: required (hourly volume, avg price), additional (volatility, trends), or all (default)'
     )
 
     args = parser.parse_args()
