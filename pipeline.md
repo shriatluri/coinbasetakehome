@@ -110,20 +110,9 @@ ON candles(product, datetime);
 
 1. **Modular Architecture**: Clean separation between ETL and visualization layers
 2. **Incremental Loading**: Efficient data updates without redundant API calls
-3. **Data Validation**: Strict validation with graceful handling of invalid records
-4. **Error Handling**: Comprehensive error handling with clear logging
-5. **Empty Data Handling**: Visualizations gracefully handle missing or empty data
-6. **Flexible Entry Points**: Both unified and granular execution options
-7. **Additional Insights**: Beyond required charts, includes volatility, trends, and pattern analysis
-
----
-
-## What Makes This "Data Engineering"
-
-1. **Separation of Concerns**: Each module has one job
-2. **Incremental Processing**: Only process new data (streaming-ready)
-3. **Data Validation**: Strict validation with clear rules
-4. **Idempotency**: Can re-run safely (upserts, not blind inserts)
-5. **Auditability**: Raw data preserved for debugging
-6. **Configuration Management**: No hardcoded values in logic
-7. **Clear Schema**: Typed columns, primary keys, indexes
+3. **Idempotency**: Can re-run safely (upserts, not blind inserts)
+4. **Data Validation**: Strict validation with graceful handling of invalid records
+5. **Error Handling**: Comprehensive error handling with clear logging
+6. **Empty Data Handling**: Visualizations gracefully handle missing or empty data
+7. **Flexible Entry Points**: Both unified and granular execution options
+8. **Additional Insights**: Beyond required charts, includes volatility, trends, and pattern analysis
