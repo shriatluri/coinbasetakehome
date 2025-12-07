@@ -56,28 +56,49 @@ def plot_hourly_volume(output_path: Path = None) -> None:
     # Convert datetime column
     df['datetime'] = pd.to_datetime(df['datetime'])
 
-    # Create figure
-    _, ax = plt.subplots(figsize=(14, 6))
+    # Create figure with dual y-axis (BTC and ETH have very different volume scales)
+    fig, ax1 = plt.subplots(figsize=(14, 6))
 
-    for product in df['product'].unique():
-        product_df = df[df['product'] == product]
-        ax.plot(
-            product_df['datetime'],
-            product_df['volume'],
-            label=product,
-            color=COLORS.get(product, None),
-            linewidth=1.5,
+    # Plot BTC on left axis
+    btc_df = df[df['product'] == 'BTC-USD']
+    if not btc_df.empty:
+        ax1.plot(
+            btc_df['datetime'],
+            btc_df['volume'],
+            label='BTC-USD',
+            color=COLORS['BTC-USD'],
+            linewidth=2,
             alpha=0.8
         )
+    ax1.set_xlabel('Date', fontsize=12)
+    ax1.set_ylabel('BTC-USD Volume', fontsize=12, color=COLORS['BTC-USD'])
+    ax1.tick_params(axis='y', labelcolor=COLORS['BTC-USD'])
+    ax1.set_title('Hourly Trading Volume by Product', fontsize=14, fontweight='bold')
+    ax1.grid(True, alpha=0.3)
 
-    ax.set_xlabel('Date', fontsize=12)
-    ax.set_ylabel('Volume', fontsize=12)
-    ax.set_title('Hourly Trading Volume by Product', fontsize=14, fontweight='bold')
-    ax.legend(loc='upper right')
+    # Plot ETH on right axis
+    ax2 = ax1.twinx()
+    eth_df = df[df['product'] == 'ETH-USD']
+    if not eth_df.empty:
+        ax2.plot(
+            eth_df['datetime'],
+            eth_df['volume'],
+            label='ETH-USD',
+            color=COLORS['ETH-USD'],
+            linewidth=2,
+            alpha=0.8
+        )
+    ax2.set_ylabel('ETH-USD Volume', fontsize=12, color=COLORS['ETH-USD'])
+    ax2.tick_params(axis='y', labelcolor=COLORS['ETH-USD'])
+
+    # Combine legends
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
 
     # Format x-axis
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-    ax.xaxis.set_major_locator(mdates.DayLocator())
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+    ax1.xaxis.set_major_locator(mdates.DayLocator())
     plt.xticks(rotation=45)
 
     plt.tight_layout()
@@ -121,7 +142,7 @@ def plot_average_price(output_path: Path = None) -> None:
     # Create figure with dual y-axis (BTC and ETH have very different price scales)
     fig, ax1 = plt.subplots(figsize=(14, 6))
 
-    # Plot BTC on left axis
+    # Plot BTC on left axis with smoother styling
     btc_df = df[df['product'] == 'BTC-USD']
     if not btc_df.empty:
         ax1.plot(
@@ -129,13 +150,18 @@ def plot_average_price(output_path: Path = None) -> None:
             btc_df['avg_price'],
             label='BTC-USD',
             color=COLORS['BTC-USD'],
-            linewidth=1.5
+            linewidth=2.5,
+            alpha=0.9,
+            marker='o',
+            markersize=3,
+            markevery=12  # Show marker every 12 hours to reduce clutter
         )
     ax1.set_xlabel('Date', fontsize=12)
-    ax1.set_ylabel('BTC-USD Price ($)', fontsize=12, color=COLORS['BTC-USD'])
+    ax1.set_ylabel('BTC-USD Price ($)', fontsize=12, color=COLORS['BTC-USD'], fontweight='bold')
     ax1.tick_params(axis='y', labelcolor=COLORS['BTC-USD'])
+    ax1.grid(True, alpha=0.2, linestyle='--')
 
-    # Plot ETH on right axis
+    # Plot ETH on right axis with smoother styling
     ax2 = ax1.twinx()
     eth_df = df[df['product'] == 'ETH-USD']
     if not eth_df.empty:
@@ -144,23 +170,27 @@ def plot_average_price(output_path: Path = None) -> None:
             eth_df['avg_price'],
             label='ETH-USD',
             color=COLORS['ETH-USD'],
-            linewidth=1.5
+            linewidth=2.5,
+            alpha=0.9,
+            marker='s',
+            markersize=3,
+            markevery=12  # Show marker every 12 hours to reduce clutter
         )
-    ax2.set_ylabel('ETH-USD Price ($)', fontsize=12, color=COLORS['ETH-USD'])
+    ax2.set_ylabel('ETH-USD Price ($)', fontsize=12, color=COLORS['ETH-USD'], fontweight='bold')
     ax2.tick_params(axis='y', labelcolor=COLORS['ETH-USD'])
 
-    # Title and legend
-    fig.suptitle('Average Price by Product (Hourly)', fontsize=14, fontweight='bold')
+    # Title
+    fig.suptitle('Average Price by Product (Hourly)', fontsize=15, fontweight='bold', y=0.98)
 
-    # Combine legends
+    # Combine legends with better positioning
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.9, fontsize=11)
 
     # Format x-axis
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
     ax1.xaxis.set_major_locator(mdates.DayLocator())
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45, ha='right')
 
     plt.tight_layout()
 
