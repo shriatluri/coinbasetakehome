@@ -52,15 +52,21 @@ Cleans, validates, and enriches raw data. Validates each candle record to ensure
 Manages DuckDB storage and database operations. Creates tables and indexes on first run. Supports incremental loading by querying the database for the most recent timestamp per product and only fetching new data. Uses upsert operations (INSERT OR REPLACE) to handle overlapping records safely, making the pipeline idempotent.
 
 ### Visualization Layer
-Generates charts from database data. Organized into three modules for maintainability:
+Generates interactive charts from database data using Plotly. Organized into three modules for maintainability:
 - **`visualize.py`**: Main entry point that coordinates chart generation
 - **`required.py`**: Contains required visualizations (hourly volume, average price)
 - **`additional.py`**: Contains additional visualizations (volatility, trends, patterns)
 
-Includes empty data validation to gracefully handle missing or empty datasets. Supports generating required charts only, additional charts only, or all charts. Uses brand colors (BTC orange, ETH blue) for consistent visual identity.
+Includes empty data validation to gracefully handle missing or empty datasets. Supports generating required charts only, additional charts only, or all charts. Uses brand colors (BTC orange, ETH blue) for consistent visual identity. Charts automatically open in the default browser after generation.
+
+**Interactive Features (Plotly):**
+- Hover tooltips with exact values
+- Zoom and pan controls
+- Legend toggle to show/hide traces
+- Download as PNG via toolbar
 
 **Required Charts:**
-- **Hourly Volume**: Line chart showing volume per hour for BTC-USD and ETH-USD
+- **Hourly Volume**: Interactive line chart showing volume per hour for BTC-USD and ETH-USD
 - **Average Price**: Dual-axis line chart for price trends (accounts for BTC/ETH scale difference)
 
 **Additional Charts:**

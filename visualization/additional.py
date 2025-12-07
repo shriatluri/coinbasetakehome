@@ -9,8 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 
 from visualization.required import get_connection, COLORS
@@ -25,10 +25,10 @@ def plot_price_volatility(output_path: Path = None) -> None:
     Shows the price range (volatility) for each hour.
 
     Args:
-        output_path: Path to save chart (default: charts/price_volatility.png)
+        output_path: Path to save chart (default: charts/price_volatility.html)
     """
     if output_path is None:
-        output_path = config.CHARTS_DIR / "price_volatility.png"
+        output_path = config.CHARTS_DIR / "price_volatility.html"
 
     conn = get_connection()
 
@@ -48,106 +48,132 @@ def plot_price_volatility(output_path: Path = None) -> None:
     # Convert datetime column
     df['datetime'] = pd.to_datetime(df['datetime'])
 
-    # Create figure
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
+    # Create figure with 2 rows
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        subplot_titles=('Price Range (High-Low) by Product', 'Price Volatility: Spread as % of Mid Price'),
+        specs=[[{"secondary_y": True}], [{"secondary_y": False}]]
+    )
 
-    # Top plot: High-Low spread (absolute) with dual Y-axes
-    # Plot BTC on left axis
+    # Top plot: High-Low spread with dual Y-axes
     btc_df = df[df['product'] == 'BTC-USD']
-    if not btc_df.empty:
-        ax1.fill_between(
-            btc_df['datetime'],
-            btc_df['low'],
-            btc_df['high'],
-            alpha=0.3,
-            label='BTC-USD Range',
-            color=COLORS['BTC-USD']
-        )
-        ax1.plot(
-            btc_df['datetime'],
-            btc_df['high'],
-            color=COLORS['BTC-USD'],
-            linewidth=1,
-            alpha=0.6
-        )
-        ax1.plot(
-            btc_df['datetime'],
-            btc_df['low'],
-            color=COLORS['BTC-USD'],
-            linewidth=1,
-            alpha=0.6
-        )
-    ax1.set_xlabel('Date', fontsize=12)
-    ax1.set_ylabel('BTC-USD Price ($)', fontsize=12, color=COLORS['BTC-USD'])
-    ax1.tick_params(axis='y', labelcolor=COLORS['BTC-USD'])
-    ax1.set_title('Price Range (High-Low) by Product', fontsize=14, fontweight='bold')
-    ax1.grid(True, alpha=0.3)
-
-    # Plot ETH on right axis
-    ax1_right = ax1.twinx()
     eth_df = df[df['product'] == 'ETH-USD']
-    if not eth_df.empty:
-        ax1_right.fill_between(
-            eth_df['datetime'],
-            eth_df['low'],
-            eth_df['high'],
-            alpha=0.3,
-            label='ETH-USD Range',
-            color=COLORS['ETH-USD']
-        )
-        ax1_right.plot(
-            eth_df['datetime'],
-            eth_df['high'],
-            color=COLORS['ETH-USD'],
-            linewidth=1,
-            alpha=0.6
-        )
-        ax1_right.plot(
-            eth_df['datetime'],
-            eth_df['low'],
-            color=COLORS['ETH-USD'],
-            linewidth=1,
-            alpha=0.6
-        )
-    ax1_right.set_ylabel('ETH-USD Price ($)', fontsize=12, color=COLORS['ETH-USD'])
-    ax1_right.tick_params(axis='y', labelcolor=COLORS['ETH-USD'])
 
-    # Combine legends
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax1_right.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+    # BTC range band (primary y-axis)
+    if not btc_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=btc_df['datetime'],
+                y=btc_df['high'],
+                name='BTC-USD High',
+                line=dict(color=COLORS['BTC-USD'], width=1),
+                opacity=0.6,
+                showlegend=False,
+                hovertemplate='High: $%{y:,.2f}<extra></extra>'
+            ),
+            row=1, col=1, secondary_y=False
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=btc_df['datetime'],
+                y=btc_df['low'],
+                name='BTC-USD Range',
+                line=dict(color=COLORS['BTC-USD'], width=1),
+                opacity=0.6,
+                fill='tonexty',
+                fillcolor=f"rgba(247, 147, 26, 0.3)",
+                hovertemplate='Low: $%{y:,.2f}<extra></extra>'
+            ),
+            row=1, col=1, secondary_y=False
+        )
+
+    # ETH range band (secondary y-axis)
+    if not eth_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=eth_df['datetime'],
+                y=eth_df['high'],
+                name='ETH-USD High',
+                line=dict(color=COLORS['ETH-USD'], width=1),
+                opacity=0.6,
+                showlegend=False,
+                hovertemplate='High: $%{y:,.2f}<extra></extra>'
+            ),
+            row=1, col=1, secondary_y=True
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=eth_df['datetime'],
+                y=eth_df['low'],
+                name='ETH-USD Range',
+                line=dict(color=COLORS['ETH-USD'], width=1),
+                opacity=0.6,
+                fill='tonexty',
+                fillcolor=f"rgba(98, 126, 234, 0.3)",
+                hovertemplate='Low: $%{y:,.2f}<extra></extra>'
+            ),
+            row=1, col=1, secondary_y=True
+        )
 
     # Bottom plot: Spread as percentage of price
     for product in df['product'].unique():
         product_df = df[df['product'] == product]
         mid_price = (product_df['high'] + product_df['low']) / 2
         spread_pct = (product_df['spread'] / mid_price) * 100
-        ax2.plot(
-            product_df['datetime'],
-            spread_pct,
-            label=product,
-            color=COLORS.get(product, None),
-            linewidth=1.5,
-            alpha=0.8
+        fig.add_trace(
+            go.Scatter(
+                x=product_df['datetime'],
+                y=spread_pct,
+                name=product,
+                line=dict(color=COLORS.get(product, '#808080'), width=1.5),
+                opacity=0.8,
+                hovertemplate=f'<b>{product}</b><br>Volatility: %{{y:.3f}}%<extra></extra>'
+            ),
+            row=2, col=1
         )
 
-    ax2.set_xlabel('Date', fontsize=12)
-    ax2.set_ylabel('Volatility (%)', fontsize=12)
-    ax2.set_title('Price Volatility: Spread as % of Mid Price', fontsize=14, fontweight='bold')
-    ax2.legend(loc='upper right')
-    ax2.grid(True, alpha=0.3)
+    # Update layout
+    fig.update_layout(
+        title=dict(
+            text='Price Volatility Analysis',
+            font=dict(size=18, color='#333'),
+            x=0.5
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='right',
+            x=1
+        ),
+        hovermode='x unified',
+        template='plotly_white',
+        height=700
+    )
 
-    # Format x-axis
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-    ax2.xaxis.set_major_locator(mdates.DayLocator())
-    plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45)
-
-    plt.tight_layout()
+    # Update axes
+    fig.update_xaxes(tickformat='%m/%d', row=2, col=1)
+    fig.update_yaxes(
+        title_text='BTC-USD Price ($)',
+        title_font=dict(color=COLORS['BTC-USD']),
+        tickfont=dict(color=COLORS['BTC-USD']),
+        tickprefix='$',
+        row=1, col=1, secondary_y=False
+    )
+    fig.update_yaxes(
+        title_text='ETH-USD Price ($)',
+        title_font=dict(color=COLORS['ETH-USD']),
+        tickfont=dict(color=COLORS['ETH-USD']),
+        tickprefix='$',
+        row=1, col=1, secondary_y=True
+    )
+    fig.update_yaxes(title_text='Volatility (%)', row=2, col=1)
 
     # Save
     output_path.parent.mkdir(exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
+    fig.write_html(output_path, include_plotlyjs=True, full_html=True)
 
     logger.info(f"Price volatility chart saved to {output_path}")
 
@@ -158,10 +184,10 @@ def plot_price_change_trends(output_path: Path = None) -> None:
     Shows hourly price movements and cumulative trends.
 
     Args:
-        output_path: Path to save chart (default: charts/price_change_trends.png)
+        output_path: Path to save chart (default: charts/price_change_trends.html)
     """
     if output_path is None:
-        output_path = config.CHARTS_DIR / "price_change_trends.png"
+        output_path = config.CHARTS_DIR / "price_change_trends.html"
 
     conn = get_connection()
 
@@ -181,68 +207,85 @@ def plot_price_change_trends(output_path: Path = None) -> None:
     # Convert datetime column
     df['datetime'] = pd.to_datetime(df['datetime'])
 
-    # Create figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
+    # Create figure with 2 rows
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        subplot_titles=('Hourly Price Change Percentage', 'Cumulative Price Change Over Time')
+    )
 
     # Top plot: Hourly price change percentage
     for product in df['product'].unique():
         product_df = df[df['product'] == product]
-        colors_fill = COLORS.get(product, '#808080')
-        ax1.fill_between(
-            product_df['datetime'],
-            0,
-            product_df['price_change_pct'],
-            alpha=0.3,
-            color=colors_fill
-        )
-        ax1.plot(
-            product_df['datetime'],
-            product_df['price_change_pct'],
-            label=product,
-            color=colors_fill,
-            linewidth=1.5,
-            marker='o',
-            markersize=2,
-            alpha=0.8
+        color = COLORS.get(product, '#808080')
+
+        # Fill area
+        fig.add_trace(
+            go.Scatter(
+                x=product_df['datetime'],
+                y=product_df['price_change_pct'],
+                name=product,
+                line=dict(color=color, width=1.5),
+                mode='lines+markers',
+                marker=dict(size=3),
+                opacity=0.8,
+                fill='tozeroy',
+                fillcolor=f"rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.2)",
+                hovertemplate=f'<b>{product}</b><br>Change: %{{y:.3f}}%<extra></extra>'
+            ),
+            row=1, col=1
         )
 
-    ax1.axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
-    ax1.set_ylabel('Price Change (%)', fontsize=12)
-    ax1.set_title('Hourly Price Change Percentage', fontsize=14, fontweight='bold')
-    ax1.legend(loc='upper right')
-    ax1.grid(True, alpha=0.3)
+    # Add zero line
+    fig.add_hline(y=0, line_dash="dash", line_color="black", opacity=0.5, row=1, col=1)
 
     # Bottom plot: Cumulative price change
     for product in df['product'].unique():
         product_df = df[df['product'] == product].copy()
         product_df['cumulative_change'] = product_df['price_change_pct'].cumsum()
-        ax2.plot(
-            product_df['datetime'],
-            product_df['cumulative_change'],
-            label=product,
-            color=COLORS.get(product, None),
-            linewidth=2,
-            alpha=0.8
+        fig.add_trace(
+            go.Scatter(
+                x=product_df['datetime'],
+                y=product_df['cumulative_change'],
+                name=f'{product} (Cumulative)',
+                line=dict(color=COLORS.get(product, '#808080'), width=2),
+                opacity=0.8,
+                showlegend=False,
+                hovertemplate=f'<b>{product}</b><br>Cumulative: %{{y:.2f}}%<extra></extra>'
+            ),
+            row=2, col=1
         )
 
-    ax2.axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
-    ax2.set_xlabel('Date', fontsize=12)
-    ax2.set_ylabel('Cumulative Price Change (%)', fontsize=12)
-    ax2.set_title('Cumulative Price Change Over Time', fontsize=14, fontweight='bold')
-    ax2.legend(loc='upper left')
-    ax2.grid(True, alpha=0.3)
+    # Add zero line
+    fig.add_hline(y=0, line_dash="dash", line_color="black", opacity=0.5, row=2, col=1)
 
-    # Format x-axis
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-    ax2.xaxis.set_major_locator(mdates.DayLocator())
-    plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45)
+    # Update layout
+    fig.update_layout(
+        title=dict(
+            text='Price Change Trends',
+            font=dict(size=18, color='#333'),
+            x=0.5
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='right',
+            x=1
+        ),
+        hovermode='x unified',
+        template='plotly_white',
+        height=700
+    )
 
-    plt.tight_layout()
+    # Update axes
+    fig.update_xaxes(tickformat='%m/%d', title_text='Date', row=2, col=1)
+    fig.update_yaxes(title_text='Price Change (%)', row=1, col=1)
+    fig.update_yaxes(title_text='Cumulative Price Change (%)', row=2, col=1)
 
     # Save
     output_path.parent.mkdir(exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
+    fig.write_html(output_path, include_plotlyjs=True, full_html=True)
 
     logger.info(f"Price change trends chart saved to {output_path}")
-

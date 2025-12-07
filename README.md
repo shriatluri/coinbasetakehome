@@ -21,11 +21,11 @@ coinbasetakehome/
 ├── raw_data/            # Raw API responses (for debugging)
 │   └── candles_raw.json
 │
-├── charts/              # Generated visualizations
-│   ├── hourly_volume.png      # Required
-│   ├── avg_price.png          # Required
-│   ├── price_volatility.png   # Additional
-│   └── price_change_trends.png # Additional
+├── charts/              # Generated visualizations (interactive HTML)
+│   ├── hourly_volume.html      # Required
+│   ├── avg_price.html          # Required
+│   ├── price_volatility.html   # Additional
+│   └── price_change_trends.html # Additional
 │
 ├── coinbase.duckdb      # Database file
 │
@@ -127,18 +127,23 @@ This generates all 4 visualizations (required + additional).
 python visualization/visualize.py --type required
 ```
 Generates the 2 required visualizations:
-- `hourly_volume.png` - Trading volume over time
-- `avg_price.png` - Price trends (dual-axis for BTC/ETH scale difference)
+- `hourly_volume.html` - Trading volume over time
+- `avg_price.html` - Price trends (dual-axis for BTC/ETH scale difference)
 
 **Generate only additional charts:**
 ```bash
 python visualization/visualize.py --type additional
 ```
 Generates 2 additional visualizations:
-- `price_volatility.png` - Price range (high-low) and volatility percentage
-- `price_change_trends.png` - Hourly price changes and cumulative trends
+- `price_volatility.html` - Price range (high-low) and volatility percentage
+- `price_change_trends.html` - Hourly price changes and cumulative trends
 
-All charts are saved to the `charts/` directory.
+All charts are saved to the `charts/` directory and **automatically open in your browser**.
+
+**Disable auto-open:**
+```bash
+python visualization/visualize.py --no-open
+```
 
 ### Step 3: Query the Database
 
@@ -180,10 +185,16 @@ Harlequin provides a user-friendly interface with syntax highlighting, query his
 
 ## Visualizations
 
+All visualizations are **interactive HTML charts** powered by Plotly. They automatically open in your browser and support:
+- Hover tooltips with exact values
+- Zoom and pan
+- Legend toggle to show/hide traces
+- Download as PNG
+
 ### Required Visualizations
-- `hourly_volume.png` - Trading volume over time for BTC-USD and ETH-USD
-- `avg_price.png` - Price trends with dual-axis (accounts for BTC/ETH scale difference)
+- `hourly_volume.html` - Trading volume over time for BTC-USD and ETH-USD
+- `avg_price.html` - Price trends with dual-axis (accounts for BTC/ETH scale difference)
 
 ### Additional Visualizations
-- `price_volatility.png` - Price range (high-low spread) and volatility as percentage of mid-price
-- `price_change_trends.png` - Hourly price change percentage and cumulative price change over time
+- `price_volatility.html` - Price range (high-low spread) and volatility as percentage of mid-price
+- `price_change_trends.html` - Hourly price change percentage and cumulative price change over time

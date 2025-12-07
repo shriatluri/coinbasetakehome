@@ -10,8 +10,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
 import duckdb
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 
 from ETL_process import config
@@ -19,7 +19,6 @@ from ETL_process import config
 logger = logging.getLogger(__name__)
 
 # Style settings
-plt.style.use('seaborn-v0_8-whitegrid')
 COLORS = {'BTC-USD': '#F7931A', 'ETH-USD': '#627EEA'}  # Brand colors
 
 
@@ -33,10 +32,10 @@ def plot_hourly_volume(output_path: Path = None) -> None:
     Generate hourly volume chart for all trading pairs.
 
     Args:
-        output_path: Path to save chart (default: charts/hourly_volume.png)
+        output_path: Path to save chart (default: charts/hourly_volume.html)
     """
     if output_path is None:
-        output_path = config.CHARTS_DIR / "hourly_volume.png"
+        output_path = config.CHARTS_DIR / "hourly_volume.html"
 
     conn = get_connection()
 
@@ -56,57 +55,82 @@ def plot_hourly_volume(output_path: Path = None) -> None:
     # Convert datetime column
     df['datetime'] = pd.to_datetime(df['datetime'])
 
-    # Create figure with dual y-axis (BTC and ETH have very different volume scales)
-    fig, ax1 = plt.subplots(figsize=(14, 6))
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    # Plot BTC on left axis
+    # Plot BTC on primary y-axis
     btc_df = df[df['product'] == 'BTC-USD']
     if not btc_df.empty:
-        ax1.plot(
-            btc_df['datetime'],
-            btc_df['volume'],
-            label='BTC-USD',
-            color=COLORS['BTC-USD'],
-            linewidth=2,
-            alpha=0.8
+        fig.add_trace(
+            go.Scatter(
+                x=btc_df['datetime'],
+                y=btc_df['volume'],
+                name='BTC-USD',
+                line=dict(color=COLORS['BTC-USD'], width=2),
+                opacity=0.8,
+                hovertemplate='<b>BTC-USD</b><br>Date: %{x}<br>Volume: %{y:,.2f}<extra></extra>'
+            ),
+            secondary_y=False
         )
-    ax1.set_xlabel('Date', fontsize=12)
-    ax1.set_ylabel('BTC-USD Volume', fontsize=12, color=COLORS['BTC-USD'])
-    ax1.tick_params(axis='y', labelcolor=COLORS['BTC-USD'])
-    ax1.set_title('Hourly Trading Volume by Product', fontsize=14, fontweight='bold')
-    ax1.grid(True, alpha=0.3)
 
-    # Plot ETH on right axis
-    ax2 = ax1.twinx()
+    # Plot ETH on secondary y-axis
     eth_df = df[df['product'] == 'ETH-USD']
     if not eth_df.empty:
-        ax2.plot(
-            eth_df['datetime'],
-            eth_df['volume'],
-            label='ETH-USD',
-            color=COLORS['ETH-USD'],
-            linewidth=2,
-            alpha=0.8
+        fig.add_trace(
+            go.Scatter(
+                x=eth_df['datetime'],
+                y=eth_df['volume'],
+                name='ETH-USD',
+                line=dict(color=COLORS['ETH-USD'], width=2),
+                opacity=0.8,
+                hovertemplate='<b>ETH-USD</b><br>Date: %{x}<br>Volume: %{y:,.2f}<extra></extra>'
+            ),
+            secondary_y=True
         )
-    ax2.set_ylabel('ETH-USD Volume', fontsize=12, color=COLORS['ETH-USD'])
-    ax2.tick_params(axis='y', labelcolor=COLORS['ETH-USD'])
 
-    # Combine legends
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+    # Update layout
+    fig.update_layout(
+        title=dict(
+            text='Hourly Trading Volume by Product',
+            font=dict(size=18, color='#333'),
+            x=0.5
+        ),
+        xaxis=dict(
+            title='Date',
+            tickformat='%m/%d',
+            gridcolor='rgba(128,128,128,0.2)',
+            showgrid=True
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='right',
+            x=1
+        ),
+        hovermode='x unified',
+        template='plotly_white',
+        height=500
+    )
 
-    # Format x-axis
-    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-    ax1.xaxis.set_major_locator(mdates.DayLocator())
-    plt.xticks(rotation=45)
-
-    plt.tight_layout()
+    # Update y-axes
+    fig.update_yaxes(
+        title_text='BTC-USD Volume',
+        title_font=dict(color=COLORS['BTC-USD']),
+        tickfont=dict(color=COLORS['BTC-USD']),
+        gridcolor='rgba(128,128,128,0.2)',
+        secondary_y=False
+    )
+    fig.update_yaxes(
+        title_text='ETH-USD Volume',
+        title_font=dict(color=COLORS['ETH-USD']),
+        tickfont=dict(color=COLORS['ETH-USD']),
+        secondary_y=True
+    )
 
     # Save
     output_path.parent.mkdir(exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
+    fig.write_html(output_path, include_plotlyjs=True, full_html=True)
 
     logger.info(f"Hourly volume chart saved to {output_path}")
 
@@ -116,10 +140,10 @@ def plot_average_price(output_path: Path = None) -> None:
     Generate average price chart for all trading pairs.
 
     Args:
-        output_path: Path to save chart (default: charts/avg_price.png)
+        output_path: Path to save chart (default: charts/avg_price.html)
     """
     if output_path is None:
-        output_path = config.CHARTS_DIR / "avg_price.png"
+        output_path = config.CHARTS_DIR / "avg_price.html"
 
     conn = get_connection()
 
@@ -139,65 +163,87 @@ def plot_average_price(output_path: Path = None) -> None:
     # Convert datetime column
     df['datetime'] = pd.to_datetime(df['datetime'])
 
-    # Create figure with dual y-axis (BTC and ETH have very different price scales)
-    fig, ax1 = plt.subplots(figsize=(14, 6))
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    # Plot BTC on left axis with smoother styling
+    # Plot BTC on primary y-axis
     btc_df = df[df['product'] == 'BTC-USD']
     if not btc_df.empty:
-        ax1.plot(
-            btc_df['datetime'],
-            btc_df['avg_price'],
-            label='BTC-USD',
-            color=COLORS['BTC-USD'],
-            linewidth=2.5,
-            alpha=0.9,
-            marker='o',
-            markersize=3,
-            markevery=12  # Show marker every 12 hours to reduce clutter
+        fig.add_trace(
+            go.Scatter(
+                x=btc_df['datetime'],
+                y=btc_df['avg_price'],
+                name='BTC-USD',
+                line=dict(color=COLORS['BTC-USD'], width=2.5),
+                mode='lines+markers',
+                marker=dict(size=4, symbol='circle'),
+                opacity=0.9,
+                hovertemplate='<b>BTC-USD</b><br>Date: %{x}<br>Price: $%{y:,.2f}<extra></extra>'
+            ),
+            secondary_y=False
         )
-    ax1.set_xlabel('Date', fontsize=12)
-    ax1.set_ylabel('BTC-USD Price ($)', fontsize=12, color=COLORS['BTC-USD'], fontweight='bold')
-    ax1.tick_params(axis='y', labelcolor=COLORS['BTC-USD'])
-    ax1.grid(True, alpha=0.2, linestyle='--')
 
-    # Plot ETH on right axis with smoother styling
-    ax2 = ax1.twinx()
+    # Plot ETH on secondary y-axis
     eth_df = df[df['product'] == 'ETH-USD']
     if not eth_df.empty:
-        ax2.plot(
-            eth_df['datetime'],
-            eth_df['avg_price'],
-            label='ETH-USD',
-            color=COLORS['ETH-USD'],
-            linewidth=2.5,
-            alpha=0.9,
-            marker='s',
-            markersize=3,
-            markevery=12  # Show marker every 12 hours to reduce clutter
+        fig.add_trace(
+            go.Scatter(
+                x=eth_df['datetime'],
+                y=eth_df['avg_price'],
+                name='ETH-USD',
+                line=dict(color=COLORS['ETH-USD'], width=2.5),
+                mode='lines+markers',
+                marker=dict(size=4, symbol='square'),
+                opacity=0.9,
+                hovertemplate='<b>ETH-USD</b><br>Date: %{x}<br>Price: $%{y:,.2f}<extra></extra>'
+            ),
+            secondary_y=True
         )
-    ax2.set_ylabel('ETH-USD Price ($)', fontsize=12, color=COLORS['ETH-USD'], fontweight='bold')
-    ax2.tick_params(axis='y', labelcolor=COLORS['ETH-USD'])
 
-    # Title
-    fig.suptitle('Average Price by Product (Hourly)', fontsize=15, fontweight='bold', y=0.98)
+    # Update layout
+    fig.update_layout(
+        title=dict(
+            text='Average Price by Product (Hourly)',
+            font=dict(size=18, color='#333'),
+            x=0.5
+        ),
+        xaxis=dict(
+            title='Date',
+            tickformat='%m/%d',
+            gridcolor='rgba(128,128,128,0.2)',
+            showgrid=True
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='right',
+            x=1
+        ),
+        hovermode='x unified',
+        template='plotly_white',
+        height=500
+    )
 
-    # Combine legends with better positioning
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.9, fontsize=11)
-
-    # Format x-axis
-    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-    ax1.xaxis.set_major_locator(mdates.DayLocator())
-    plt.xticks(rotation=45, ha='right')
-
-    plt.tight_layout()
+    # Update y-axes
+    fig.update_yaxes(
+        title_text='BTC-USD Price ($)',
+        title_font=dict(color=COLORS['BTC-USD']),
+        tickfont=dict(color=COLORS['BTC-USD']),
+        tickprefix='$',
+        gridcolor='rgba(128,128,128,0.2)',
+        secondary_y=False
+    )
+    fig.update_yaxes(
+        title_text='ETH-USD Price ($)',
+        title_font=dict(color=COLORS['ETH-USD']),
+        tickfont=dict(color=COLORS['ETH-USD']),
+        tickprefix='$',
+        secondary_y=True
+    )
 
     # Save
     output_path.parent.mkdir(exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
+    fig.write_html(output_path, include_plotlyjs=True, full_html=True)
 
     logger.info(f"Average price chart saved to {output_path}")
-
