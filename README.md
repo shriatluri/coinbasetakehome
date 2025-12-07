@@ -1,6 +1,6 @@
 # Coinbase Data Pipeline
 
-ETL pipeline that fetches cryptocurrency data from Coinbase, stores it in DuckDB, and generates visualizations.
+ETL pipeline that fetches cryptocurrency data from Coinbase, stores it in DuckDB, and generates visualizations. The instructions to open Part 2, Data Quality Analysis, are at the bottom of the README.
 
 ## Project Structure
 
@@ -198,3 +198,9 @@ All visualizations are **interactive HTML charts** powered by Plotly. They autom
 ### Additional Visualizations
 - `price_volatility.html` - Price range (high-low spread) and volatility as percentage of mid-price
 - `price_change_trends.html` - Hourly price change percentage and cumulative price change over time
+
+## Part 2: Data Quality Analysis
+
+To view Part 2 (Data Quality Analysis):
+1. Click on [`part2_analysis.md`](part2_analysis.md)
+2. Click the PDF link in that file to view the complete data quality analysis
