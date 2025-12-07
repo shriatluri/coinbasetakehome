@@ -205,36 +205,71 @@ def plot_price_volatility(output_path: Path = None) -> None:
     # Create figure
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
 
-    # Top plot: High-Low spread (absolute)
-    for product in df['product'].unique():
-        product_df = df[df['product'] == product]
+    # Top plot: High-Low spread (absolute) with dual Y-axes
+    # Plot BTC on left axis
+    btc_df = df[df['product'] == 'BTC-USD']
+    if not btc_df.empty:
         ax1.fill_between(
-            product_df['datetime'],
-            product_df['low'],
-            product_df['high'],
+            btc_df['datetime'],
+            btc_df['low'],
+            btc_df['high'],
             alpha=0.3,
-            label=f'{product} Range',
-            color=COLORS.get(product, None)
+            label='BTC-USD Range',
+            color=COLORS['BTC-USD']
         )
         ax1.plot(
-            product_df['datetime'],
-            product_df['high'],
-            color=COLORS.get(product, None),
+            btc_df['datetime'],
+            btc_df['high'],
+            color=COLORS['BTC-USD'],
             linewidth=1,
             alpha=0.6
         )
         ax1.plot(
-            product_df['datetime'],
-            product_df['low'],
-            color=COLORS.get(product, None),
+            btc_df['datetime'],
+            btc_df['low'],
+            color=COLORS['BTC-USD'],
             linewidth=1,
             alpha=0.6
         )
-
-    ax1.set_ylabel('Price ($)', fontsize=12)
+    ax1.set_xlabel('Date', fontsize=12)
+    ax1.set_ylabel('BTC-USD Price ($)', fontsize=12, color=COLORS['BTC-USD'])
+    ax1.tick_params(axis='y', labelcolor=COLORS['BTC-USD'])
     ax1.set_title('Price Range (High-Low) by Product', fontsize=14, fontweight='bold')
-    ax1.legend(loc='upper left')
     ax1.grid(True, alpha=0.3)
+
+    # Plot ETH on right axis
+    ax1_right = ax1.twinx()
+    eth_df = df[df['product'] == 'ETH-USD']
+    if not eth_df.empty:
+        ax1_right.fill_between(
+            eth_df['datetime'],
+            eth_df['low'],
+            eth_df['high'],
+            alpha=0.3,
+            label='ETH-USD Range',
+            color=COLORS['ETH-USD']
+        )
+        ax1_right.plot(
+            eth_df['datetime'],
+            eth_df['high'],
+            color=COLORS['ETH-USD'],
+            linewidth=1,
+            alpha=0.6
+        )
+        ax1_right.plot(
+            eth_df['datetime'],
+            eth_df['low'],
+            color=COLORS['ETH-USD'],
+            linewidth=1,
+            alpha=0.6
+        )
+    ax1_right.set_ylabel('ETH-USD Price ($)', fontsize=12, color=COLORS['ETH-USD'])
+    ax1_right.tick_params(axis='y', labelcolor=COLORS['ETH-USD'])
+
+    # Combine legends
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax1_right.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
 
     # Bottom plot: Spread as percentage of price
     for product in df['product'].unique():
